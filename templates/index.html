@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bãi Đỗ Xe Thông Minh</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+        
+        .status-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .status-number {
+            font-size: 72px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        
+        .status-label {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .info-box {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .info-box .label {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        
+        .info-box .value {
+            color: #333;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: pulse 2s infinite;
+        }
+        
+        .status-indicator.available {
+            background: #10b981;
+        }
+        
+        .status-indicator.full {
+            background: #ef4444;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚗 Bãi Đỗ Xe Thông Minh</h1>
+        
+        <div class="status-card">
+            <div class="status-label">Số chỗ trống hiện tại</div>
+            <div class="status-number" id="available-slots">-</div>
+            <div class="status-label">
+                <span class="status-indicator" id="status-indicator"></span>
+                <span id="status-text">Đang tải...</span>
+            </div>
+        </div>
+        
+        <div class="info-grid">
+            <div class="info-box">
+                <div class="label">Tổng số chỗ</div>
+                <div class="value" id="total-slots">-</div>
+            </div>
+            <div class="info-box">
+                <div class="label">Đang sử dụng</div>
+                <div class="value" id="occupied-slots">-</div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            Cập nhật mỗi 2 giây | Raspberry Pi 3 B+
+        </div>
+    </div>
+    
+    <script>
+        // Hàm cập nhật dữ liệu từ API
+        function updateStatus() {
+            fetch('/api/status')
+                .then(response => response.json())
+                .then(data => {
+                    // Cập nhật số chỗ trống
+                    document.getElementById('available-slots').textContent = data.available;
+                    
+                    // Cập nhật tổng số chỗ
+                    document.getElementById('total-slots').textContent = data.total_slots;
+                    
+                    // Cập nhật số chỗ đang sử dụng
+                    document.getElementById('occupied-slots').textContent = data.occupied;
+                    
+                    // Cập nhật trạng thái
+                    const indicator = document.getElementById('status-indicator');
+                    const statusText = document.getElementById('status-text');
+                    
+                    if (data.is_full) {
+                        indicator.className = 'status-indicator full';
+                        statusText.textContent = 'Bãi đầy';
+                    } else {
+                        indicator.className = 'status-indicator available';
+                        statusText.textContent = 'Còn chỗ trống';
+                    }
+                })
+                .catch(error => {
+                    console.error('Lỗi khi tải dữ liệu:', error);
+                });
+        }
+        
+        // Cập nhật ngay khi tải trang
+        updateStatus();
+        
+        // Tự động cập nhật mỗi 2 giây
+        setInterval(updateStatus, 2000);
+    </script>
+</body>
+</html>
