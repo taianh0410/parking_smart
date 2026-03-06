@@ -1,160 +1,54 @@
-# 🚗 Hệ Thống Bãi Đỗ Xe Thông Minh
+Smart Parking System
 
-Dự án IoT sử dụng Raspberry Pi 3 B+ để quản lý bãi đỗ xe tự động với cơ chế chống đếm sai.
+This IoT project uses a Raspberry Pi 3 B+ to manage an automated parking lot with a mechanism to prevent miscounting.
 
-## 📋 Tính Năng
+Features
 
-- ✅ Tự động mở/đóng cổng barie khi quẹt thẻ
-- ✅ Phát hiện xe qua cổng bằng cảm biến siêu âm
-- ✅ **State Machine chống đếm sai** - Xe phải đi qua hoàn toàn mới được tính
-- ✅ Theo dõi số chỗ trống real-time
-- ✅ Đèn LED báo trạng thái bãi đầy
-- ✅ Web Dashboard hiển thị trạng thái
+- Automatic gate opening/closing upon card swipe
+- Ultrasonic vehicle detection
+- **State Machine (Anti-false counting)** - Vehicles must pass completely before being counted
+- Real-time monitoring of available spaces
+- LED indicator for full parking status
+- Web Dashboard displaying status
 
-## 🔌 Sơ Đồ Kết Nối GPIO
+GPIO Connection Diagram
 
-| Thiết bị | GPIO Pin |
-|----------|----------|
-| Servo (Barie) | GPIO 6 |
-| Siêu âm TRIGGER | GPIO 15 |
-| Siêu âm ECHO | GPIO 4 |
-| Cảm biến IR | GPIO 22 |
-| LED trạng thái | GPIO 13 |
-| Nút bấm | GPIO 21 |
+Device - GPIO Pin
+Servo (Barrier) - GPIO 6
+Ultrasonic TRIGGER - GPIO 15
+Ultrasonic ECHO - GPIO 4
+IR Sensor - GPIO 22
+Status LED - GPIO 13
+Push Button - GPIO 21
 
-## 🏗️ Kiến Trúc Code (OOP)
+Code Architecture (OOP)
 
-```
 SmartParkingSystem
-├── GateController          # Điều khiển cổng + State Machine
-├── ParkingLotManager       # Quản lý bãi đỗ
-├── ParkingSlot             # Quản lý từng chỗ đỗ
-└── WebDashboard            # Web server Flask
-```
+├── GateController ├── ParkingLotManager ├── ParkingSlot └── WebDashboard ```
 
-## 🔄 State Machine (Chống Đếm Sai)
-
-```
+State Machine (Anti-false counting) Incorrect)
 IDLE → GATE_OPENING → WAITING_ENTRY → VEHICLE_IN_ZONE → WAITING_EXIT → GATE_CLOSING → IDLE
-```
 
-**Logic chống đếm sai:**
-1. Xe phải đi VÀO vùng cảm biến (WAITING_ENTRY → VEHICLE_IN_ZONE)
-2. Sau đó đi RA KHỎI vùng cảm biến (VEHICLE_IN_ZONE → WAITING_EXIT)
-3. Chỉ khi đó mới tính là 1 lượt vào hợp lệ
+**Logic to prevent incorrect counting:**
+1. The vehicle must enter the sensor area (WAITING_ENTRY → VEHICLE_IN_ZONE)
+2. Then exit the sensor area (VEHICLE_IN_ZONE → WAITING_EXIT)
 
-**Trường hợp KHÔNG được đếm:**
-- Xe tiến vào rồi lùi ra → KHÔNG tăng số xe
+3. Only then will it be counted as a valid entry.
 
-## 📦 Cài Đặt
+**Cases NOT counted:**
 
-### 1. Cài đặt thư viện
+- Vehicle enters and then reverses out → NO increase in vehicle count
 
-```bash
-pip3 install -r requirements.txt
-```
+Student Project
 
-### 2. Test phần cứng (QUAN TRỌNG!)
+- Project: Smart Parking Lot
 
-Trước khi chạy hệ thống chính, test từng linh kiện:
+- Platform: Raspberry Pi 3 B+
 
-```bash
-python3 TEST_HARDWARE.py
-```
+- Language: Python 3
 
-Script này sẽ kiểm tra:
-- ✅ Servo quay được không
-- ✅ Nút bấm hoạt động không
-- ✅ Cảm biến siêu âm đo được khoảng cách không
-- ✅ Cảm biến IR phát hiện vật cản không
-- ✅ LED sáng/tắt được không
+- Libraries: gpiozero, Flask
 
-### 3. Chạy chương trình chính
+## License
 
-```bash
-python3 main.py
-```
-
-### 4. Truy cập Dashboard
-
-Mở trình duyệt và truy cập:
-```
-http://localhost:5000
-```
-
-Hoặc từ thiết bị khác trong cùng mạng:
-```
-http://<IP_của_Raspberry_Pi>:5000
-```
-
-**Tìm IP của Raspberry Pi:**
-```bash
-hostname -I
-```
-
-## 🎯 Cách Sử Dụng
-
-1. Khởi động hệ thống: `python3 main.py`
-2. Bấm nút GPIO 21 (mô phỏng quẹt thẻ)
-3. Servo mở cổng 90°
-4. Xe đi vào → Hệ thống phát hiện bằng cảm biến siêu âm
-5. Xe đi qua hoàn toàn → Cổng tự động đóng
-6. Số xe trong bãi tăng lên
-7. Dashboard tự động cập nhật
-
-## 📁 Cấu Trúc Thư Mục
-
-```
-smart-parking/
-├── main.py                 # Chương trình chính
-├── config.py               # Cấu hình GPIO
-├── gate_controller.py      # Điều khiển cổng + State Machine
-├── parking_lot_manager.py  # Quản lý bãi đỗ
-├── parking_slot.py         # Quản lý slot đỗ
-├── web_dashboard.py        # Web server
-├── templates/
-│   └── index.html         # Giao diện web
-├── requirements.txt        # Thư viện Python
-└── README.md              # File này
-```
-
-## 🧪 Test Hệ Thống
-
-### Test cơ bản:
-1. Bấm nút → Cổng mở
-2. Đưa tay vào vùng cảm biến siêu âm (< 20cm)
-3. Rút tay ra → Cổng đóng, số xe tăng
-
-### Test chống đếm sai:
-1. Bấm nút → Cổng mở
-2. Đưa tay vào vùng cảm biến
-3. **Rút tay ra ngay** (mô phỏng xe lùi)
-4. ✅ Số xe KHÔNG tăng (chống đếm sai thành công)
-
-## 🛠️ Tùy Chỉnh
-
-Chỉnh sửa file `config.py`:
-
-```python
-TOTAL_SLOTS = 5              # Số chỗ đỗ
-DISTANCE_THRESHOLD = 20      # Ngưỡng phát hiện xe (cm)
-SERVO_OPEN_ANGLE = 90        # Góc mở servo
-```
-
-## 📝 Ghi Chú Quan Trọng
-
-- Đảm bảo Raspberry Pi đã enable GPIO
-- Cảm biến siêu âm hoạt động tốt trong khoảng 2cm - 400cm
-- Servo cần nguồn 5V riêng nếu dùng servo lớn
-- Web dashboard tự động cập nhật mỗi 2 giây
-
-## 👨‍🎓 Sinh Viên Thực Hiện
-
-- Dự án: Bãi Đỗ Xe Thông Minh
-- Nền tảng: Raspberry Pi 3 B+
-- Ngôn ngữ: Python 3
-- Thư viện: gpiozero, Flask
-
-## 📄 License
-
-Dự án học tập - Tự do sử dụng cho mục đích giáo dục
+Learning Project - Free for educational purposes
